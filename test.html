@@ -457,14 +457,14 @@
       } catch {}
     }
 
-    /* Map with static image */
-    const map = L.map('map', { zoomControl: true, preferCanvas: true, crs: L.CRS.Simple, minZoom: -2 });
+    /* Map with single image overlay (CRS.Simple) */
+    const map = L.map('map', { zoomControl: true, preferCanvas: true, crs: L.CRS.Simple, minZoom: -2, maxBoundsViscosity: 0.0 });
 
     let imageLayer = null;
     function swapImageOverlay() {
       if (imageLayer) imageLayer.remove();
       const b = [[0, 0], [state.image.height, state.image.width]];
-      imageLayer = L.imageOverlay(state.image.path, b).addTo(map);
+      imageLayer = L.imageOverlay(state.image.path || 'map.jpg', b).addTo(map);
       map.setMaxBounds(b);
       map.fitBounds(b);
     }
