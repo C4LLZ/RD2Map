@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RDR2 Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-geoman@latest/free.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <header class="sidebar-header">
+        <h1>RDR2 Map</h1>
+        <button class="btn icon only" id="collapseBtn" aria-label="Toggle sidebar">›</button>
+        <button class="btn icon only mobile-only" id="mobileClose" aria-label="Close">✕</button>
+      </header>
+
+      <!-- Layers -->
+      <section class="group">
+        <h3 class="group-title">Layers</h3>
+        <label class="control checkbox">
+          <input type="checkbox" id="defaultLayer" checked />
+          <span>Default markers</span>
+        </label>
+      </section>
+
+      <!-- Tools -->
+      <section class="group">
+        <h3 class="group-title">Tools</h3>
+        <div class="row two">
+          <button class="btn" id="addMarkerBtn">Add marker</button>
+          <button class="btn" id="drawAreaBtn">Draw area</button>
+        </div>
+        <div class="row two">
+          <button class="btn" id="exportBtn">Export my data</button>
+          <label for="importFile" class="btn ghost">Import my data</label>
+          <input type="file" id="importFile" hidden accept=".json" />
+        </div>
+        <button class="btn danger" id="clearBtn">Clear my data</button>
+      </section>
+
+      <!-- Legend -->
+      <section class="group">
+        <div class="legend-header">
+          <h3 class="group-title">Legend</h3>
+          <button class="btn icon only" id="addCatBtn" aria-label="Add category">+</button>
+        </div>
+        <ul class="legend" id="legend"></ul>
+
+        <!-- Add Category Form -->
+        <div id="addCatForm" class="addcat hidden">
+          <input id="newCatName" class="input" type="text" placeholder="Category name" />
+          <input id="newCatColor" class="input color" type="color" value="#9b59b6" />
+          <button class="btn primary mini" id="saveCatBtn">Add</button>
+          <button class="btn ghost mini" id="cancelCatBtn">Cancel</button>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Map -->
+    <main id="map" aria-label="Map"></main>
+  </div>
+
+  <!-- Marker Panel -->
+  <div id="markerPanel" class="panel hidden" role="dialog" aria-modal="true" aria-labelledby="panelTitle">
+    <div class="panel-header">
+      <h2 id="panelTitle">New marker</h2>
+      <button class="btn icon only" id="closePanelBtn" aria-label="Close">✕</button>
+    </div>
+
+    <form id="markerForm">
+      <label class="control">Title
+        <input class="input" type="text" id="mkName" placeholder="Name" required />
+      </label>
+
+      <label class="control">Description
+        <textarea class="input" id="mkDesc" rows="3" placeholder="Details"></textarea>
+      </label>
+
+      <label class="control">Category
+        <select class="input" id="mkCat"></select>
+      </label>
+
+      <div class="hint">Click on the map to place the marker</div>
+
+      <div class="panel-actions">
+        <button type="button" class="btn ghost" id="cancelPlace">Cancel</button>
+        <button type="submit" class="btn primary">Ready to place</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Zone Panel -->
+  <div id="zonePanel" class="panel hidden" role="dialog" aria-modal="true" aria-labelledby="zonePanelTitle">
+    <div class="panel-header">
+      <h2 id="zonePanelTitle">New zone</h2>
+      <button class="btn icon only" id="closeZonePanelBtn" aria-label="Close">✕</button>
+    </div>
+
+    <form id="zoneForm">
+      <label class="control">Title
+        <input class="input" type="text" id="zoneName" placeholder="Name" required />
+      </label>
+
+      <label class="control">Description
+        <textarea class="input" id="zoneDesc" rows="3" placeholder="Details"></textarea>
+      </label>
+
+      <label class="control">Category
+        <select class="input" id="zoneCat"></select>
+      </label>
+
+      <div class="hint">Draw the area on the map after submitting</div>
+
+      <div class="panel-actions">
+        <button type="button" class="btn ghost" id="cancelZone">Cancel</button>
+        <button type="submit" class="btn primary">Ready to draw</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Category List Sheet -->
+  <div id="listPanel" class="sheet hidden" aria-live="polite">
+    <div class="sheet-header">
+      <div class="sheet-title">
+        <h3 id="listTitle">Category</h3>
+        <input id="listSearch" class="input" placeholder="Search" />
+        <button id="zoomBtn" class="btn" style="font-size: 0.85rem; padding: 0.35rem 0.5rem;">Zoom to category</button>
+      </div>
+      <button class="btn icon only" id="closeListBtn" aria-label="Close">✕</button>
+    </div>
+    <div id="listBody" class="sheet-body"></div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="https://unpkg.com/leaflet-geoman@latest/free.js"></script>
+  <script defer src="map.js"></script>
+</body>
+</html>
