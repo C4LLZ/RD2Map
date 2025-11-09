@@ -118,6 +118,17 @@
     .leaflet-popup-content-wrapper { background:#0f0f11; color:var(--text); border:1px solid rgba(212,175,55,.35); border-radius: 8px; }
     .leaflet-popup-tip { background:#0f0f11; border:1px solid rgba(212,175,55,.35); }
 
+    /* Grouped list by category */
+    .group { border-top: 1px solid rgba(212,175,55,.15); }
+    .group:first-child { border-top: 0; }
+    .group-header { display:flex; align-items:center; gap:8px; padding: 8px 12px; cursor: pointer; user-select: none; }
+    .group-header:hover { background: rgba(212,175,55,.05); }
+    .group-header .chev { transition: transform .15s ease; color: var(--gold); }
+    .group.collapsed .group-header .chev { transform: rotate(-90deg); }
+    .group-header .count { margin-left:auto; font-size:11px; color: var(--subtext); }
+    .group-items { }
+    .group.collapsed .group-items { display:none; }
+
     dialog { width: min(720px, 92vw); border: 1px solid rgba(212,175,55,.3); background:#0f0f11; color: var(--text); border-radius: 12px; }
     dialog::backdrop { background: rgba(0,0,0,.6); }
     dialog header { grid-column: unset; grid-row: unset; }
@@ -250,6 +261,7 @@
       markerColor: '#d4af37',
       zoneColor: '#c59d2f',
       visible: { 'General': true, 'Animals': true, 'Collectibles': true, 'Hideouts': true },
+      collapsed: {},
       image: {
         path: 'map.jpg',
         width: 3000,
@@ -321,6 +333,25 @@
     swapImageOverlay();
 
     /* Feature Layer and Draw Control */
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&#39;');
+    }
+    function popupHtmlFor(f) {
+      const p = f.properties || {};
+      const title = esc(p.title || (f.geometry?.type === 'Point' ? 'Marker' : 'Zone'));
+      const desc = esc(p.description || '');
+      const cat = esc(p.category || 'General');
+      const img = p.image ? `<img src="${esc(p.image)}" style="max-width:240px; max-height:240px; margin-top:8px; border-radius:8px; display:block;"/>` : '';
+      const edit = `<div style="margin-top:8px;"><button class="btn" onclick="openEditor('${p.id}')">Edit</button></div>`;
+      return `
+        <div style="min-width:220px;">
+          <div style="font-weight:600; color: var(--gold); margin-bottom:4px;">${title}</div>
+          <div style="font-size:11px; color:var(--subtext); margin-bottom:6px;">Category: ${cat}</div>
+          ${desc ? `<div style=\"white-space:pre-wrap; line-height:1.35;\">${desc}</div>` : ''}
+          ${img}
+          ${edit}
+        </div>`;
+    }
     const drawnLayer = L.geoJSON({ type: 'FeatureCollection', features: [] }, {
       pointToLayer: (feat, latlng) => {
         const color = feat.properties?.color || state.markerColor;
@@ -328,7 +359,10 @@
           radius: 7, color: '#000', weight: 1, fillColor: color, fillOpacity: 0.95
         });
       },
-      style: feat => ({ color: feat.properties?.color || state.zoneColor, weight: 2, fillOpacity: 0.25 })
+      style: feat => ({ color: feat.properties?.color || state.zoneColor, weight: 2, fillOpacity: 0.25 }),
+      onEachFeature: (feat, layer) => {
+        layer.bindPopup(popupHtmlFor(feat));
+      }
     }).addTo(map);
 
     function refreshFeatures() {
@@ -386,6 +420,7 @@
       feature.properties.color = isPoint ? state.markerColor : state.zoneColor;
       feature.properties.title = isPoint ? 'Marker' : 'Zone';
       feature.properties.description = '';
+      feature.properties.image = '';
       state.features.push(feature);
       saveState();
       refreshFeatures();
@@ -486,29 +521,53 @@
 
     function refreshList() {
       itemsEl.innerHTML = '';
+      const byCat = new Map();
+      state.categories.forEach(c => byCat.set(c, []));
       state.features.forEach(f => {
-        const hidden = state.visible[f.properties.category] === false;
-        const row = document.createElement('div');
-        row.className = 'item';
-        const left = document.createElement('div');
-        left.className = 'meta';
-        const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = f.properties.color || '#aaa';
-        const title = document.createElement('div'); title.className = 'title'; title.textContent = f.properties.title || (f.geometry.type === 'Point' ? 'Marker' : 'Zone');
-        const cat = document.createElement('div'); cat.className = 'cat'; cat.textContent = f.properties.category;
-        left.appendChild(dot); left.appendChild(title); left.appendChild(cat);
-        const right = document.createElement('div');
-        const openBtn = document.createElement('button'); openBtn.className = 'btn'; openBtn.textContent = 'Edit';
-        const flyBtn = document.createElement('button'); flyBtn.className = 'btn ghost'; flyBtn.textContent = 'Go';
-        const delBtn = document.createElement('button'); delBtn.className = 'btn danger'; delBtn.textContent = 'Delete';
-        right.appendChild(openBtn); right.appendChild(flyBtn); right.appendChild(delBtn);
-        row.appendChild(left); row.appendChild(right);
-        if (hidden) row.style.opacity = .45;
+        const c = f.properties.category || 'General';
+        if (!byCat.has(c)) byCat.set(c, []);
+        byCat.get(c).push(f);
+      });
 
-        openBtn.onclick = () => openEditor(f.properties.id);
-        flyBtn.onclick = () => flyToFeature(f.properties.id);
-        delBtn.onclick = () => deleteFeature(f.properties.id);
+      state.categories.forEach(catName => {
+        const list = byCat.get(catName) || [];
+        if (!list.length) return;
+        const group = document.createElement('div'); group.className = 'group' + (state.collapsed?.[catName] ? ' collapsed' : '');
+        const header = document.createElement('div'); header.className = 'group-header';
+        const chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = '▾';
+        const title = document.createElement('div'); title.textContent = catName;
+        const count = document.createElement('div'); count.className = 'count'; count.textContent = String(list.length);
+        header.appendChild(chev); header.appendChild(title); header.appendChild(count);
+        header.onclick = () => { state.collapsed[catName] = !state.collapsed[catName]; saveState(); refreshList(); };
+        group.appendChild(header);
 
-        itemsEl.appendChild(row);
+        const container = document.createElement('div'); container.className = 'group-items';
+        list.forEach(f => {
+          const hidden = state.visible[f.properties.category] === false;
+          const row = document.createElement('div');
+          row.className = 'item';
+          const left = document.createElement('div');
+          left.className = 'meta';
+          const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = f.properties.color || '#aaa';
+          const title = document.createElement('div'); title.className = 'title'; title.textContent = f.properties.title || (f.geometry.type === 'Point' ? 'Marker' : 'Zone');
+          const cat = document.createElement('div'); cat.className = 'cat'; cat.textContent = f.properties.category;
+          left.appendChild(dot); left.appendChild(title); left.appendChild(cat);
+          const right = document.createElement('div');
+          const openBtn = document.createElement('button'); openBtn.className = 'btn'; openBtn.textContent = 'Edit';
+          const flyBtn = document.createElement('button'); flyBtn.className = 'btn ghost'; flyBtn.textContent = 'Go';
+          const delBtn = document.createElement('button'); delBtn.className = 'btn danger'; delBtn.textContent = 'Delete';
+          right.appendChild(openBtn); right.appendChild(flyBtn); right.appendChild(delBtn);
+          row.appendChild(left); row.appendChild(right);
+          if (hidden) row.style.opacity = .45;
+
+          openBtn.onclick = () => openEditor(f.properties.id);
+          flyBtn.onclick = () => flyToFeature(f.properties.id);
+          delBtn.onclick = () => deleteFeature(f.properties.id);
+
+          container.appendChild(row);
+        });
+        group.appendChild(container);
+        itemsEl.appendChild(group);
       });
     }
 
@@ -543,6 +602,11 @@
       <div class="modal-body">
         <div class="field"><label>Title</label><input type="text" id="e-title" /></div>
         <div class="field"><label>Description</label><textarea id="e-desc" rows="3"></textarea></div>
+        <div class="field"><label>Image URL</label><input type="text" id="e-image" placeholder="https://... or data URL" /></div>
+        <div class="field" style="display:flex; gap:8px; align-items:center;">
+          <input type="file" id="e-image-file" accept="image/*" style="flex:1;" />
+          <img id="e-preview" alt="preview" style="max-width:96px; max-height:64px; border-radius:6px; display:none; border:1px solid rgba(212,175,55,.2);" />
+        </div>
         <div class="field" style="display:flex; gap:8px;">
           <div style="flex:1;">
             <label>Category</label>
@@ -568,6 +632,9 @@
       editor.dataset.id = id;
       editor.querySelector('#e-title').value = f.properties.title || '';
       editor.querySelector('#e-desc').value = f.properties.description || '';
+      editor.querySelector('#e-image').value = f.properties.image || '';
+      const prev = editor.querySelector('#e-preview');
+      if (f.properties.image) { prev.src = f.properties.image; prev.style.display = 'block'; } else { prev.src = ''; prev.style.display = 'none'; }
       const catSel = editor.querySelector('#e-cat');
       catSel.innerHTML = state.categories.map(c => `<option value="${c}">${c}</option>`).join('');
       catSel.value = f.properties.category;
@@ -581,6 +648,7 @@
       if (idx < 0) return;
       state.features[idx].properties.title = editor.querySelector('#e-title').value.trim();
       state.features[idx].properties.description = editor.querySelector('#e-desc').value.trim();
+      state.features[idx].properties.image = editor.querySelector('#e-image').value.trim();
       state.features[idx].properties.category = editor.querySelector('#e-cat').value;
       state.features[idx].properties.color = editor.querySelector('#e-color').value;
       saveState(); refreshFeatures(); editor.close();
@@ -588,6 +656,27 @@
     editor.querySelector('#e-center').onclick = () => {
       const id = editor.dataset.id; editor.close(); flyToFeature(id);
     };
+
+    // Image file -> data URL
+    editor.querySelector('#e-image-file').addEventListener('change', evt => {
+      const file = evt.target.files?.[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const url = String(reader.result || '');
+        const input = editor.querySelector('#e-image');
+        input.value = url;
+        const prev = editor.querySelector('#e-preview');
+        prev.src = url; prev.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Keep preview in sync when typing URL
+    editor.querySelector('#e-image').addEventListener('input', e => {
+      const v = e.target.value.trim();
+      const prev = editor.querySelector('#e-preview');
+      if (v) { prev.src = v; prev.style.display = 'block'; } else { prev.src = ''; prev.style.display = 'none'; }
+    });
 
     /* Export / Import / Reset */
     document.getElementById('export').onclick = () => {
