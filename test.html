@@ -80,6 +80,9 @@
       background: linear-gradient(180deg, rgba(212,175,55,.04), transparent 20%), var(--panel);
       overflow: hidden; display: grid; grid-template-rows: auto auto 1fr auto; min-width: 0;
     }
+    /* Avoid horizontal overflow, allow content to wrap */
+    aside .section, aside .footer { min-width: 0; }
+    .controls { flex-wrap: wrap; }
 
     .section { padding: 12px 14px; border-bottom: 1px solid rgba(212,175,55,.15); }
     .section h2 { margin: 0 0 8px; font-size: 14px; color: var(--gold); letter-spacing: 1px; }
@@ -107,14 +110,15 @@
     .title { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cat { font-size: 10px; color: var(--subtext); }
 
-    .footer { position: relative; display:flex; gap:8px; padding: 10px 14px; background: #121215; border-top: 1px solid rgba(212,175,55,.15); }
+    .footer { position: relative; display:flex; gap:8px; padding: 10px 14px; background: #121215; border-top: 1px solid rgba(212,175,55,.15); flex-wrap: wrap; }
     .footer input[type="file"]{ display:none; }
 
     #map { grid-column: 2; grid-row: 2; height: 100%; width: 100%; }
 
     .leaflet-control { box-shadow: 0 2px 8px var(--shadow); border: 1px solid rgba(212,175,55,.2); }
     .leaflet-bar a, .leaflet-bar a:hover { background: #0e0e10; color: var(--text); border-bottom: 1px solid rgba(212,175,55,.2); }
-    .leaflet-draw-toolbar a { background: #0e0e10 !important; }
+    /* Hide Leaflet Draw toolbar if present (we use custom buttons) */
+    .leaflet-draw { display:none !important; }
     .leaflet-popup-content-wrapper { background:#0f0f11; color:var(--text); border:1px solid rgba(212,175,55,.35); border-radius: 8px; }
     .leaflet-popup-tip { background:#0f0f11; border:1px solid rgba(212,175,55,.35); }
 
@@ -148,15 +152,13 @@
   <div id="app">
     <header>
       <div class="brand">
-        <div class="logo">RD</div>
-        <h1>RDR2 Map Ledger</h1>
+        <h1>Ranch Map</h1>
       </div>
       <div class="controls">
         <button id="btn-draw-marker" class="btn primary" title="Add marker">Marker</button>
         <button id="btn-draw-poly" class="btn primary" title="Add zone">Zone</button>
         <button id="btn-edit" class="btn" title="Edit layers">Edit</button>
         <button id="btn-stop" class="btn ghost" title="Stop drawing or editing">Stop</button>
-        <button id="btn-help" class="btn" title="Help">Help</button>
       </div>
     </header>
 
@@ -164,12 +166,14 @@
       <div class="section">
         <h2>Category</h2>
         <div class="field">
-          <label for="category-select">Current category</label>
-          <div class="pill-row" id="category-pills"></div>
-          <div style="display:flex; gap:8px; margin-top:8px;">
+          <label>Add category</label>
+          <div style="display:flex; gap:8px;">
             <input type="text" id="category-input" placeholder="New category" />
             <button id="add-category" class="btn">Add</button>
           </div>
+        <div style=" display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="edit-categories" class="btn ghost">Edit Categories</button>
+        </div>
         </div>
         <div class="field" style="display:flex; gap:8px;">
           <div style="flex:1;">
@@ -194,13 +198,12 @@
       <div id="items" class="list"></div>
 
       <div class="footer">
+        <button id="open-file" class="btn">Open File</button>
+        <button id="save-file" class="btn">Save File</button>
         <button id="export" class="btn">Export</button>
         <label class="btn" for="import-file">Import</label>
         <input id="import-file" type="file" accept="application/json" />
         <button id="reset" class="btn danger">Reset</button>
-        <div style="margin-left:auto; display:flex; gap:8px;">
-          <button id="settings" class="btn ghost">Image</button>
-        </div>
       </div>
     </aside>
 
@@ -221,6 +224,68 @@
         <li>Export or import JSON. Data persists locally.</li>
       </ol>
       <p style="color:var(--subtext); font-size:12px;">This uses a static image with CRS.Simple. Coordinates are pixels.</p>
+    </div>
+  </dialog>
+
+  <!-- Export modal -->
+  <dialog id="export-modal">
+    <header style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
+      <strong>Export</strong>
+      <button class="btn" onclick="document.getElementById('export-modal').close()">Close</button>
+    </header>
+    <div class="modal-body">
+      <div class="field">
+        <label>What would you like to export?</label>
+        <div style="display:grid; gap:6px;">
+          <label style="display:flex; gap:8px; align-items:center;">
+            <input type="radio" name="ex-scope" value="all" checked />
+            <span>All items (with settings)</span>
+          </label>
+          <label style="display:flex; gap:8px; align-items:center;">
+            <input type="radio" name="ex-scope" value="single" />
+            <span>Single item</span>
+          </label>
+        </div>
+      </div>
+      <div class="field" id="ex-item-wrap" style="display:none;">
+        <label>Choose item</label>
+        <select id="ex-item"></select>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button id="ex-do" class="btn primary">Export</button>
+        <button class="btn" onclick="document.getElementById('export-modal').close()">Cancel</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Reset confirm modal -->
+  <dialog id="confirm-reset">
+    <header style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
+      <strong>Confirm Reset</strong>
+      <button class="btn" onclick="document.getElementById('confirm-reset').close()">Close</button>
+    </header>
+    <div class="modal-body">
+      <p style="margin-top:0;">This will clear all items and restore defaults. Your changes will be lost unless exported. Continue?</p>
+      <div style="display:flex; gap:8px;">
+        <button id="confirm-reset-yes" class="btn danger">Reset</button>
+        <button class="btn" onclick="document.getElementById('confirm-reset').close()">Cancel</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Edit categories modal -->
+  <dialog id="cat-modal">
+    <header style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
+      <strong>Edit Categories</strong>
+      <button class="btn" onclick="document.getElementById('cat-modal').close()">Close</button>
+    </header>
+    <div class="modal-body">
+      <div id="cat-list" class="field"></div>
+      <div class="field">
+        <label>Move items to</label>
+        <select id="cat-move-target"></select>
+      </div>
+      <p style="color:var(--subtext); font-size:12px;">Deleting a category will move its items to the selected target.</p>
     </div>
   </dialog>
 
@@ -256,11 +321,10 @@
     /* Storage */
     const STORAGE_KEY = 'rdr2_map_ledger_v2_image';
     const DEFAULTS = {
-      categories: ['General', 'Animals', 'Collectibles', 'Hideouts'],
-      currentCategory: 'General',
+      categories: [],
       markerColor: '#d4af37',
       zoneColor: '#c59d2f',
-      visible: { 'General': true, 'Animals': true, 'Collectibles': true, 'Hideouts': true },
+      visible: {},
       collapsed: {},
       image: {
         path: 'map.jpg',
@@ -279,27 +343,28 @@
       } catch { return structuredClone(DEFAULTS); }
     }
     function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    let currentFileHandle = null;
+    let saveTimer = null;
+    function queueFileSave() {
+      if (!currentFileHandle) return; // fallback is localStorage only
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { saveWorkingFile().catch(()=>{}); }, 400);
+    }
 
     let state = loadState();
 
     /* UI refs */
     const helpModal = document.getElementById('help-modal');
     const tileModal = document.getElementById('tile-modal');
+    const exportModal = document.getElementById('export-modal');
+    const confirmReset = document.getElementById('confirm-reset');
+    const catModal = document.getElementById('cat-modal');
     const itemsEl = document.getElementById('items');
-    const pillsEl = document.getElementById('category-pills');
+    // removed current-category pills UI
     const visibilityEl = document.getElementById('visibility-list');
 
     const markerColorEl = document.getElementById('marker-color');
     const zoneColorEl = document.getElementById('zone-color');
-
-    document.getElementById('btn-help').onclick = () => helpModal.showModal();
-
-    document.getElementById('settings').onclick = () => {
-      document.getElementById('img-path').value = state.image.path;
-      document.getElementById('img-w').value = state.image.width;
-      document.getElementById('img-h').value = state.image.height;
-      tileModal.showModal();
-    };
 
     document.getElementById('img-apply').onclick = () => {
       const p = document.getElementById('img-path').value.trim() || 'map.png';
@@ -318,6 +383,79 @@
       saveState();
       tileModal.close();
     };
+
+    // Image settings and category edit buttons
+    document.getElementById('edit-categories').onclick = () => {
+      const list = document.getElementById('cat-list');
+      list.innerHTML = '';
+      const targetSel = document.getElementById('cat-move-target');
+      targetSel.innerHTML = '';
+      state.categories.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; targetSel.appendChild(o); });
+      state.categories.forEach(cat => {
+        const row = document.createElement('div'); row.style.display = 'flex'; row.style.alignItems = 'center'; row.style.gap = '8px'; row.style.justifyContent = 'space-between'; row.style.marginBottom = '6px';
+        const left = document.createElement('div'); left.textContent = cat; left.style.color = 'var(--text)';
+        const right = document.createElement('div');
+        const del = document.createElement('button'); del.className = 'btn danger'; del.textContent = 'Delete';
+        del.onclick = () => {
+          const moveTo = document.getElementById('cat-move-target').value || 'General';
+          if (moveTo === cat && state.categories.length > 1) { alert('Choose a different target category'); return; }
+          state.features.forEach(f => { if (f.properties.category === cat) f.properties.category = moveTo; });
+          state.categories = state.categories.filter(x => x !== cat);
+          delete state.visible[cat];
+          if (!state.categories.includes(moveTo)) { state.categories.push(moveTo); state.visible[moveTo] = true; }
+          saveState(); refreshVisibility(); refreshFeatures();
+          document.getElementById('edit-categories').click();
+        };
+        right.appendChild(del);
+        row.appendChild(left); row.appendChild(right);
+        list.appendChild(row);
+      });
+      catModal.showModal();
+    };
+
+    // Try to load bundled data once on startup if no saved features
+    async function tryLoadBundledData() {
+      if (state && state.features && state.features.length) return;
+      try {
+        const res = await fetch('rdr2-map.json', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.state) {
+          state = Object.assign(structuredClone(DEFAULTS), data.state);
+        } else if (data.type === 'FeatureCollection' && Array.isArray(data.features)) {
+          state.features = data.features.map(f => {
+            if (!f.properties) f.properties = {};
+            if (!f.properties.id) f.properties.id = crypto.randomUUID();
+            if (!f.properties.category) f.properties.category = 'General';
+            if (!f.properties.color) f.properties.color = f.geometry.type === 'Point' ? state.markerColor : state.zoneColor;
+            return f;
+          });
+        }
+        saveState(); refreshVisibility(); refreshFeatures();
+      } catch {}
+    }
+
+    // Try to load bundled data once on startup if no saved features
+    async function tryLoadBundledData() {
+      if (state && state.features && state.features.length) return;
+      try {
+        const res = await fetch('rdr2-map.json', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.state) {
+          state = Object.assign(structuredClone(DEFAULTS), data.state);
+        } else if (data.type === 'FeatureCollection' && Array.isArray(data.features)) {
+          state.features = data.features.map(f => {
+            if (!f.properties) f.properties = {};
+            if (!f.properties.id) f.properties.id = crypto.randomUUID();
+            if (!f.properties.category) f.properties.category = 'General';
+            if (!f.properties.color) f.properties.color = f.geometry.type === 'Point' ? state.markerColor : state.zoneColor;
+            return f;
+          });
+        }
+        saveState(); refreshVisibility(); refreshFeatures();
+      } catch {}
+    }
 
     /* Map with static image */
     const map = L.map('map', { zoomControl: true, preferCanvas: true, crs: L.CRS.Simple, minZoom: -2 });
@@ -373,18 +511,7 @@
       refreshList();
     }
 
-    const drawControl = new L.Control.Draw({
-      draw: {
-        polyline: false,
-        rectangle: false,
-        circle: false,
-        circlemarker: false,
-        marker: { repeatMode: true },
-        polygon: { allowIntersection: false, showArea: true, repeatMode: true }
-      },
-      edit: { featureGroup: drawnLayer, edit: true, remove: true }
-    });
-    map.addControl(drawControl);
+    // Removed default Leaflet Draw UI controls; using custom buttons instead
 
     const btnDrawMarker = document.getElementById('btn-draw-marker');
     const btnDrawPoly = document.getElementById('btn-draw-poly');
@@ -394,15 +521,98 @@
     let activeHandler = null;
     function stopActive() { if (activeHandler) { activeHandler.disable(); activeHandler = null; } }
 
-    btnDrawMarker.onclick = () => {
+    // Pre-placement dialog for new items
+    let pendingNew = null;
+    btnDrawMarker.onclick = () => openNewItemDialog('Point');
+    btnDrawPoly.onclick = () => openNewItemDialog('Polygon');
+
+    // New Item dialog (pre-placement)
+    const newDlg = document.createElement('dialog');
+    newDlg.innerHTML = `
+      <header style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px;">
+        <strong>New item</strong>
+        <button class="btn" id="n-close">Close</button>
+      </header>
+      <div class="modal-body">
+        <div class="field"><label>Title</label><input type="text" id="n-title" /></div>
+        <div class="field"><label>Description</label><textarea id="n-desc" rows="3"></textarea></div>
+        <div class="field"><label>Image URL</label><input type="text" id="n-image" placeholder="https://... or data URL" /></div>
+        <div class="field" style="display:flex; gap:8px; align-items:center;">
+          <input type="file" id="n-image-file" accept="image/*" style="flex:1;" />
+          <img id="n-preview" alt="preview" style="max-width:96px; max-height:64px; border-radius:6px; display:none; border:1px solid rgba(212,175,55,.2);" />
+        </div>
+        <div class="field" style="display:flex; gap:8px;">
+          <div style="flex:1;">
+            <label>Category</label>
+            <select id="n-cat"></select>
+          </div>
+          <div style="flex:1;">
+            <label>Color</label>
+            <input type="color" id="n-color" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Or add new category</label>
+          <input type="text" id="n-newcat" placeholder="New category" />
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn primary" id="n-continue">Continue</button>
+          <button class="btn" id="n-cancel">Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(newDlg);
+
+    function openNewItemDialog(kind) {
       stopActive();
-      activeHandler = new L.Draw.Marker(map);
-      activeHandler.enable();
-    };
-    btnDrawPoly.onclick = () => {
+      newDlg.dataset.kind = kind;
+      const isPoint = kind === 'Point';
+      newDlg.querySelector('#n-title').value = isPoint ? 'Marker' : 'Zone';
+      newDlg.querySelector('#n-desc').value = '';
+      newDlg.querySelector('#n-image').value = '';
+      newDlg.querySelector('#n-newcat').value = '';
+      const prev = newDlg.querySelector('#n-preview'); prev.src = ''; prev.style.display = 'none';
+      const catSel = newDlg.querySelector('#n-cat');
+      catSel.innerHTML = state.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      newDlg.querySelector('#n-color').value = isPoint ? (state.markerColor || '#d4af37') : (state.zoneColor || '#c59d2f');
+      newDlg.showModal();
+    }
+
+    newDlg.querySelector('#n-close').onclick = () => newDlg.close();
+    newDlg.querySelector('#n-cancel').onclick = () => newDlg.close();
+    newDlg.querySelector('#n-image-file').addEventListener('change', evt => {
+      const file = evt.target.files?.[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const url = String(reader.result || '');
+        const input = newDlg.querySelector('#n-image'); input.value = url;
+        const prev = newDlg.querySelector('#n-preview'); prev.src = url; prev.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+    newDlg.querySelector('#n-image').addEventListener('input', e => {
+      const v = e.target.value.trim();
+      const prev = newDlg.querySelector('#n-preview');
+      if (v) { prev.src = v; prev.style.display = 'block'; } else { prev.src = ''; prev.style.display = 'none'; }
+    });
+    newDlg.querySelector('#n-continue').onclick = () => {
+      const kind = newDlg.dataset.kind;
+      const isPoint = kind === 'Point';
+      const title = newDlg.querySelector('#n-title').value.trim() || (isPoint ? 'Marker' : 'Zone');
+      const description = newDlg.querySelector('#n-desc').value.trim();
+      const image = newDlg.querySelector('#n-image').value.trim();
+      const newcat = newDlg.querySelector('#n-newcat').value.trim();
+      const category = newcat || newDlg.querySelector('#n-cat').value || 'General';
+      const color = newDlg.querySelector('#n-color').value || (isPoint ? state.markerColor : state.zoneColor);
+      pendingNew = { title, description, image, category, color };
+      // Start draw
       stopActive();
-      activeHandler = new L.Draw.Polygon(map, { shapeOptions: { color: state.zoneColor } });
+      if (isPoint) {
+        activeHandler = new L.Draw.Marker(map);
+      } else {
+        activeHandler = new L.Draw.Polygon(map, { shapeOptions: { color } });
+      }
       activeHandler.enable();
+      newDlg.close();
     };
     btnEdit.onclick = () => {
       stopActive();
@@ -416,15 +626,28 @@
       const isPoint = layer instanceof L.Marker || layer instanceof L.CircleMarker;
       const feature = isPoint ? markerToFeature(layer) : polygonToFeature(layer);
       feature.properties.id = crypto.randomUUID();
-      feature.properties.category = state.currentCategory;
-      feature.properties.color = isPoint ? state.markerColor : state.zoneColor;
-      feature.properties.title = isPoint ? 'Marker' : 'Zone';
-      feature.properties.description = '';
-      feature.properties.image = '';
+      const defaults = {
+        category: 'General',
+        color: isPoint ? state.markerColor : state.zoneColor,
+        title: isPoint ? 'Marker' : 'Zone',
+        description: '',
+        image: ''
+      };
+      const props = Object.assign(defaults, pendingNew || {});
+      feature.properties.category = props.category;
+      feature.properties.color = props.color;
+      feature.properties.title = props.title;
+      feature.properties.description = props.description;
+      feature.properties.image = props.image || '';
+      if (props.category && !state.categories.includes(props.category)) {
+        state.categories.push(props.category);
+        state.visible[props.category] = true;
+      }
       state.features.push(feature);
-      saveState();
+      saveState(); queueFileSave();
       refreshFeatures();
       stopActive();
+      pendingNew = null;
     });
 
     map.on('draw:edited', e => {
@@ -435,7 +658,7 @@
         const idx = state.features.findIndex(f => f.properties.id === id);
         if (idx >= 0) state.features[idx] = toFeature(layer, state.features[idx]);
       });
-      saveState();
+      saveState(); queueFileSave();
       refreshFeatures();
     });
 
@@ -444,7 +667,7 @@
       e.layers.eachLayer(l => { const id = getLayerId(l); if (id) ids.push(id); });
       if (ids.length) {
         state.features = state.features.filter(f => !ids.includes(f.properties.id));
-        saveState();
+        saveState(); queueFileSave();
         refreshFeatures();
       }
     });
@@ -476,17 +699,7 @@
     }
 
     /* Sidebar rendering */
-    function refreshCategoryPills() {
-      pillsEl.innerHTML = '';
-      state.categories.forEach(cat => {
-        const b = document.createElement('button');
-        b.className = 'pill' + (state.currentCategory === cat ? ' active' : '');
-        b.textContent = cat;
-        b.onclick = () => { state.currentCategory = cat; saveState(); refreshCategoryPills(); };
-        pillsEl.appendChild(b);
-      });
-    }
-    refreshCategoryPills();
+    // removed current-category pills rendering
 
     document.getElementById('add-category').onclick = () => {
       const input = document.getElementById('category-input');
@@ -495,9 +708,7 @@
       if (!state.categories.includes(val)) {
         state.categories.push(val);
         state.visible[val] = true;
-        state.currentCategory = val;
         saveState();
-        refreshCategoryPills();
         refreshVisibility();
         refreshFeatures();
       }
@@ -534,7 +745,7 @@
         if (!list.length) return;
         const group = document.createElement('div'); group.className = 'group' + (state.collapsed?.[catName] ? ' collapsed' : '');
         const header = document.createElement('div'); header.className = 'group-header';
-        const chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = '▾';
+          const chev = document.createElement('span'); chev.className = 'chev'; chev.textContent = '▾';
         const title = document.createElement('div'); title.textContent = catName;
         const count = document.createElement('div'); count.className = 'count'; count.textContent = String(list.length);
         header.appendChild(chev); header.appendChild(title); header.appendChild(count);
@@ -553,16 +764,41 @@
           const cat = document.createElement('div'); cat.className = 'cat'; cat.textContent = f.properties.category;
           left.appendChild(dot); left.appendChild(title); left.appendChild(cat);
           const right = document.createElement('div');
-          const openBtn = document.createElement('button'); openBtn.className = 'btn'; openBtn.textContent = 'Edit';
-          const flyBtn = document.createElement('button'); flyBtn.className = 'btn ghost'; flyBtn.textContent = 'Go';
-          const delBtn = document.createElement('button'); delBtn.className = 'btn danger'; delBtn.textContent = 'Delete';
-          right.appendChild(openBtn); right.appendChild(flyBtn); right.appendChild(delBtn);
+          const moreBtn = document.createElement('button'); moreBtn.className = 'btn'; moreBtn.textContent = '⋯';
+          moreBtn.setAttribute('aria-haspopup', 'true');
+          moreBtn.style.minWidth = '36px';
+          const menu = document.createElement('div');
+          menu.style.position = 'fixed';
+          menu.style.background = '#0f0f11';
+          menu.style.border = '1px solid rgba(212,175,55,.25)';
+          menu.style.borderRadius = '8px';
+          menu.style.boxShadow = '0 8px 20px rgba(0,0,0,.5)';
+          menu.style.padding = '6px';
+          menu.style.display = 'none';
+          menu.style.zIndex = '10050';
+          const mkItem = (label, cls, handler) => {
+            const b = document.createElement('button'); b.className = 'btn ' + (cls||''); b.textContent = label; b.style.display = 'block'; b.style.width = '100%'; b.style.textAlign = 'left'; b.style.margin = '4px 0'; b.onclick = () => { hideMenu(); handler(); };
+            return b;
+          };
+          const openBtn = mkItem('Edit', '', () => openEditor(f.properties.id));
+          const flyBtn = mkItem('Go', 'ghost', () => flyToFeature(f.properties.id));
+          const delBtn = mkItem('Delete', 'danger', () => deleteFeature(f.properties.id));
+          menu.appendChild(openBtn); menu.appendChild(flyBtn); menu.appendChild(delBtn);
+          function hideMenu() { menu.style.display = 'none'; document.removeEventListener('click', onDoc); }
+          function onDoc(ev) { if (!menu.contains(ev.target) && ev.target !== moreBtn) hideMenu(); }
+          moreBtn.onclick = (ev) => {
+            ev.stopPropagation();
+            const rect = moreBtn.getBoundingClientRect();
+            menu.style.left = rect.left + 'px';
+            menu.style.top = (rect.bottom + 6) + 'px';
+            menu.style.display = 'block';
+            document.addEventListener('click', onDoc);
+          };
+          right.style.position = 'relative';
+          right.appendChild(moreBtn);
+          document.body.appendChild(menu);
           row.appendChild(left); row.appendChild(right);
           if (hidden) row.style.opacity = .45;
-
-          openBtn.onclick = () => openEditor(f.properties.id);
-          flyBtn.onclick = () => flyToFeature(f.properties.id);
-          delBtn.onclick = () => deleteFeature(f.properties.id);
 
           container.appendChild(row);
         });
@@ -651,7 +887,7 @@
       state.features[idx].properties.image = editor.querySelector('#e-image').value.trim();
       state.features[idx].properties.category = editor.querySelector('#e-cat').value;
       state.features[idx].properties.color = editor.querySelector('#e-color').value;
-      saveState(); refreshFeatures(); editor.close();
+      saveState(); queueFileSave(); refreshFeatures(); editor.close();
     };
     editor.querySelector('#e-center').onclick = () => {
       const id = editor.dataset.id; editor.close(); flyToFeature(id);
@@ -679,17 +915,87 @@
     });
 
     /* Export / Import / Reset */
-    document.getElementById('export').onclick = () => {
-      const data = {
-        meta: { app: 'rdr2-map-ledger', version: 2, exportedAt: new Date().toISOString() },
-        state
-      };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    // Export flow with selection
+    function refreshExportModal() {
+      // populate items
+      const sel = document.getElementById('ex-item');
+      sel.innerHTML = state.features.map(f => `<option value="${f.properties.id}">${(f.properties.title|| (f.geometry.type==='Point'?'Marker':'Zone'))} - ${f.properties.category}</option>`).join('');
+      const radios = exportModal.querySelectorAll('input[name="ex-scope"]');
+      const wrap = document.getElementById('ex-item-wrap');
+      radios.forEach(r => r.onchange = () => { wrap.style.display = (exportModal.querySelector('input[name="ex-scope"]:checked').value === 'single') ? 'block' : 'none'; });
+      wrap.style.display = (exportModal.querySelector('input[name="ex-scope"]:checked').value === 'single') ? 'block' : 'none';
+    }
+    document.getElementById('export').onclick = () => { refreshExportModal(); exportModal.showModal(); };
+    document.getElementById('ex-do').onclick = () => {
+      const scope = exportModal.querySelector('input[name="ex-scope"]:checked').value;
+      let payload, filename;
+      if (scope === 'single') {
+        const id = document.getElementById('ex-item').value;
+        const f = state.features.find(x => x.properties.id === id);
+        if (!f) { alert('No item selected'); return; }
+        payload = f; filename = `rdr2-item-${(f.properties.title||'item').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'item'}.geojson`;
+      } else {
+        payload = { meta: { app: 'rdr2-map-ledger', version: 2, exportedAt: new Date().toISOString() }, state };
+        filename = 'rdr2-map.json';
+      }
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = 'rdr2-map.json'; a.click();
+      a.href = url; a.download = filename; a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+      exportModal.close();
     };
+
+    // File System Access API integration
+    function makeAllPayload() {
+      return { meta: { app: 'rdr2-map-ledger', version: 2, exportedAt: new Date().toISOString() }, state };
+    }
+    async function openWorkingFile() {
+      try {
+        if (!window.showOpenFilePicker) { alert('Your browser does not support opening files directly. Use Import instead.'); return; }
+        const [handle] = await window.showOpenFilePicker({
+          multiple: false,
+          types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+        });
+        currentFileHandle = handle;
+        const file = await handle.getFile();
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (data.state) {
+          state = Object.assign(structuredClone(DEFAULTS), data.state);
+        } else if (data.type === 'FeatureCollection' && Array.isArray(data.features)) {
+          state.features = data.features.map(f => {
+            if (!f.properties) f.properties = {};
+            if (!f.properties.id) f.properties.id = crypto.randomUUID();
+            if (!f.properties.category) f.properties.category = 'General';
+            if (!f.properties.color) f.properties.color = f.geometry.type === 'Point' ? state.markerColor : state.zoneColor;
+            return f;
+          });
+        }
+        saveState(); refreshVisibility(); refreshFeatures(); swapImageOverlay();
+      } catch (e) { console.warn(e); }
+    }
+    async function saveWorkingFile(forcePicker = false) {
+      try {
+        if (!currentFileHandle || forcePicker) {
+          if (!window.showSaveFilePicker) { // fallback to download
+            const payload = makeAllPayload();
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'rdr2-map.json'; a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            return;
+          }
+          currentFileHandle = await window.showSaveFilePicker({ suggestedName: 'rdr2-map.json', types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+        }
+        const writable = await currentFileHandle.createWritable();
+        await writable.write(JSON.stringify(makeAllPayload(), null, 2));
+        await writable.close();
+      } catch (e) { console.warn(e); }
+    }
+    document.getElementById('open-file').onclick = openWorkingFile;
+    document.getElementById('save-file').onclick = () => saveWorkingFile();
 
     document.getElementById('import-file').onchange = evt => {
       const file = evt.target.files?.[0]; if (!file) return;
@@ -704,27 +1010,28 @@
             state.features = data.features.map(f => {
               if (!f.properties) f.properties = {};
               if (!f.properties.id) f.properties.id = crypto.randomUUID();
-              if (!f.properties.category) f.properties.category = state.currentCategory || 'General';
+              if (!f.properties.category) f.properties.category = 'General';
               if (!f.properties.color) f.properties.color = f.geometry.type === 'Point' ? state.markerColor : state.zoneColor;
               return f;
             });
           }
-          saveState(); refreshCategoryPills(); refreshVisibility(); refreshFeatures();
+          saveState(); queueFileSave(); refreshVisibility(); refreshFeatures();
         } catch { alert('Invalid file'); }
         evt.target.value = '';
       };
       reader.readAsText(file);
     };
 
-    document.getElementById('reset').onclick = () => {
-      if (confirm('Clear all data and restore defaults')) {
-        state = structuredClone(DEFAULTS);
-        saveState(); refreshCategoryPills(); refreshVisibility(); refreshFeatures(); swapImageOverlay();
-      }
+    // Custom Reset confirm
+    document.getElementById('reset').onclick = () => { document.getElementById('confirm-reset').showModal(); };
+    document.getElementById('confirm-reset-yes').onclick = () => {
+      state = structuredClone(DEFAULTS);
+      saveState(); queueFileSave(); refreshVisibility(); refreshFeatures(); swapImageOverlay();
+      document.getElementById('confirm-reset').close();
     };
 
     /* Start */
-    refreshFeatures();
+    tryLoadBundledData().finally(() => refreshFeatures());
   </script>
 </body>
 </html>

@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "app": "rdr2-map-ledger",
+    "version": 2,
+    "exportedAt": "2025-11-09T19:35:53.201Z"
+  },
+  "state": {
+    "categories": [
+      "Drugs",
+      "Herbs"
+    ],
+    "markerColor": "#d4af37",
+    "zoneColor": "#c59d2f",
+    "visible": {
+      "Drugs": true,
+      "TEST": true
+    },
+    "collapsed": {},
+    "image": {
+      "path": "map.jpg",
+      "width": 3000,
+      "height": 2000
+    },
+    "features": []
+  }
+}
