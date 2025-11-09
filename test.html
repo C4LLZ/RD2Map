@@ -121,6 +121,8 @@
     .leaflet-draw { display:none !important; }
     .leaflet-popup-content-wrapper { background:#0f0f11; color:var(--text); border:1px solid rgba(212,175,55,.35); border-radius: 8px; }
     .leaflet-popup-tip { background:#0f0f11; border:1px solid rgba(212,175,55,.35); }
+    /* Hint the compositor for smoother pans */
+    .leaflet-image-layer { will-change: transform; }
 
     /* Grouped list by category */
     .group { border-top: 1px solid rgba(212,175,55,.15); }
@@ -458,13 +460,45 @@
     }
 
     /* Map with single image overlay (CRS.Simple) */
-    const map = L.map('map', { zoomControl: true, preferCanvas: true, crs: L.CRS.Simple, minZoom: -2, maxBoundsViscosity: 0.0 });
+    const map = L.map('map', {
+      zoomControl: true,
+      preferCanvas: true,
+      crs: L.CRS.Simple,
+      minZoom: -2,
+      maxBoundsViscosity: 0.0,
+      zoomAnimation: false,
+      markerZoomAnimation: false,
+      fadeAnimation: false,
+      updateWhenIdle: true
+    });
 
     let imageLayer = null;
-    function swapImageOverlay() {
+    const AsyncImageOverlay = L.ImageOverlay.extend({
+      _initImage() {
+        L.ImageOverlay.prototype._initImage.call(this);
+        if (this._image) {
+          try { this._image.decoding = 'async'; } catch {}
+          try { this._image.loading = 'eager'; } catch {}
+          try { this._image.fetchPriority = 'high'; } catch {}
+        }
+      }
+    });
+
+    async function preferCompressedImage() {
+      // If a WebP version exists, prefer it once and persist
+      if (!state.image || !state.image.path || /map\.jpg$/i.test(state.image.path)) {
+        try {
+          const res = await fetch('map.webp', { method: 'HEAD' });
+          if (res.ok) { state.image.path = 'map.webp'; saveState(); }
+        } catch {}
+      }
+    }
+
+    async function swapImageOverlay() {
       if (imageLayer) imageLayer.remove();
       const b = [[0, 0], [state.image.height, state.image.width]];
-      imageLayer = L.imageOverlay(state.image.path || 'map.jpg', b).addTo(map);
+      await preferCompressedImage();
+      imageLayer = new AsyncImageOverlay(state.image.path || 'map.jpg', b).addTo(map);
       map.setMaxBounds(b);
       map.fitBounds(b);
     }
@@ -490,7 +524,9 @@
           ${edit}
         </div>`;
     }
+    const canvasRenderer = L.canvas({ padding: 0.5 });
     const drawnLayer = L.geoJSON({ type: 'FeatureCollection', features: [] }, {
+      renderer: canvasRenderer,
       pointToLayer: (feat, latlng) => {
         const color = feat.properties?.color || state.markerColor;
         return L.circleMarker(latlng, {
@@ -503,12 +539,17 @@
       }
     }).addTo(map);
 
-    function refreshFeatures() {
+    // Debounced render to avoid repeated heavy redraws
+    let _refreshRaf = null;
+    function renderFeaturesNow() {
       drawnLayer.clearLayers();
       const visibleSet = state.visible || {};
       const filtered = state.features.filter(f => visibleSet[f.properties.category] !== false);
       filtered.forEach(f => drawnLayer.addData(f));
       refreshList();
+    }
+    function refreshFeatures() {
+      if (_refreshRaf) return; _refreshRaf = requestAnimationFrame(() => { _refreshRaf = null; renderFeaturesNow(); });
     }
 
     // Removed default Leaflet Draw UI controls; using custom buttons instead
