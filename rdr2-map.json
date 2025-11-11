@@ -2,7 +2,7 @@
   "meta": {
     "app": "rdr2-map-ledger",
     "version": 2,
-    "exportedAt": "2025-11-10T20:49:07.143Z"
+    "exportedAt": "2025-11-11T18:04:47.758Z"
   },
   "state": {
     "categories": [
@@ -19,14 +19,14 @@
       "TEST": true,
       "Metal Detecting": false,
       "Illegal Guy": false,
-      "Moonshine Stills": false,
+      "Moonshine Stills": true,
       "Herbs": true
     },
     "collapsed": {
       "Metal Detecting": true,
       "Illegal Guy": true,
       "Drugs": true,
-      "Herbs": false,
+      "Herbs": true,
       "Moonshine Stills": true
     },
     "image": {
@@ -394,7 +394,278 @@
             606
           ]
         }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "68797b0d-233d-400f-8273-84c558ba1b08",
+          "category": "Herbs",
+          "color": "#d400ff",
+          "title": "Burdock Root",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1374.75,
+            653.75
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "5ff87d4b-f43a-4176-84c7-de93567db2f7",
+          "category": "Illegal Guy",
+          "color": "#ff0000",
+          "title": "Illegal Guy",
+          "description": "",
+          "image": "https://media.discordapp.net/attachments/1409366775904079892/1437480752055975966/RedM_GTAProcess_BVw86I1AuI.png?ex=691365c6&is=69121446&hm=d58f9167ea72481a540d6e1e5f96145c768f19202278d68c6afe670678cdd0b3&=&format=png&quality=lossless"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1254,
+            975.75
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "44161e3b-bc2f-4698-86f8-23020b603e1b",
+          "category": "Illegal Guy",
+          "color": "#ff0000",
+          "title": "Illegal Guy",
+          "description": "",
+          "image": "https://media.discordapp.net/attachments/1409366775904079892/1437486186611478610/RedM_GTAProcess_lw514wUYt7.png?ex=69136ad6&is=69121956&hm=4307fd481100a06cd3034fd292fee0d0e82309f2fa8660e50cac9b205c57c314&=&format=png&quality=lossless"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2364.125,
+            1095
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "22dd1321-b65b-4fa0-9769-509075e8ced8",
+          "category": "Herbs",
+          "color": "#ae00ff",
+          "title": "Violet Snowdrop",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2416.125,
+            1228.5
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "27021dae-71d0-444d-9cb2-f9ff5173ff27",
+          "category": "Herbs",
+          "color": "#b28406",
+          "title": "Chantarell",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2517.75,
+            1309.75
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "2f1c1cf6-62fe-4697-b14d-6d9b9ae6f750",
+          "category": "Herbs",
+          "color": "#000000",
+          "title": "Indian Tabacco",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1461.125,
+            953.125
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "0f56a58e-665b-4604-95c4-a0989f149951",
+          "category": "Herbs",
+          "color": "#d400ff",
+          "title": "Oleander Sage",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2459.8125,
+            921.25
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "508a8a22-c218-4372-b2f8-cc49867d7f72",
+          "category": "Herbs",
+          "color": "#d400ff",
+          "title": "Hummingbird Sage",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2458.25,
+            921.5625
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "0eb4de92-bae2-4f82-9c10-e05a49a85d5a",
+          "category": "Illegal Guy",
+          "color": "#ff0000",
+          "title": "Illegal Guy",
+          "description": "Behind Sheriff's Office",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2660.5,
+            1498.8125
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "7846fec2-7d15-489b-ab91-9245ea97b72e",
+          "category": "Illegal Guy",
+          "color": "#ff0000",
+          "title": "Illegal Guy",
+          "description": "Inside the shack",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2559.75,
+            1719.5
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "9cd12977-8e21-4c40-9cdd-2358c3fd0534",
+          "category": "Herbs",
+          "color": "#44ff00",
+          "title": "Oregano",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2312.8125,
+            1289.9375
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "ea231c29-5f7b-4c74-a7b8-e4fbab096112",
+          "category": "Herbs",
+          "color": "#ff006f",
+          "title": "Wintergreen Berry",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2330.25,
+            1285.4375
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "ff99d643-344d-4af0-b4cf-626aabe414e4",
+          "category": "Herbs",
+          "color": "#44ff00",
+          "title": "Creeping Thyme",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2361.75,
+            1245
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "bbb9ad26-ffb5-4a0c-9e15-5417e9ed5e7f",
+          "category": "Herbs",
+          "color": "#ae00ff",
+          "title": "Violet Snowdrop",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2338,
+            1187.25
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "89ffc996-5b85-400d-823b-c08e37671a13",
+          "category": "Herbs",
+          "color": "#98eb00",
+          "title": "creek Plum",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2327.75,
+            1194
+          ]
+        }
       }
-    ]
+    ],
+    "search": ""
   }
 }
