@@ -2,7 +2,7 @@
   "meta": {
     "app": "rdr2-map-ledger",
     "version": 2,
-    "exportedAt": "2025-11-11T18:04:47.758Z"
+    "exportedAt": "2025-11-11T18:37:06.455Z"
   },
   "state": {
     "categories": [
@@ -15,10 +15,10 @@
     "markerColor": "#1100ff",
     "zoneColor": "#c59d2f",
     "visible": {
-      "Drugs": false,
+      "Drugs": true,
       "TEST": true,
-      "Metal Detecting": false,
-      "Illegal Guy": false,
+      "Metal Detecting": true,
+      "Illegal Guy": true,
       "Moonshine Stills": true,
       "Herbs": true
     },
@@ -662,6 +662,42 @@
           "coordinates": [
             2327.75,
             1194
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "38b8cf3a-d552-410b-8f57-c06905ca3778",
+          "category": "Herbs",
+          "color": "#371b79",
+          "title": "Blackberry",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1284.375,
+            884.375
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "10e689ed-8661-45b7-918a-6eb195bb863f",
+          "category": "Herbs",
+          "color": "#371b79",
+          "title": "Red Raspberry",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1267,
+            877.25
           ]
         }
       }
