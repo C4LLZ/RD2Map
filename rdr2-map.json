@@ -2,25 +2,399 @@
   "meta": {
     "app": "rdr2-map-ledger",
     "version": 2,
-    "exportedAt": "2025-11-09T19:35:53.201Z"
+    "exportedAt": "2025-11-10T20:49:07.143Z"
   },
   "state": {
     "categories": [
       "Drugs",
-      "Herbs"
+      "Herbs",
+      "Metal Detecting",
+      "Illegal Guy",
+      "Moonshine Stills"
     ],
-    "markerColor": "#d4af37",
+    "markerColor": "#1100ff",
     "zoneColor": "#c59d2f",
     "visible": {
-      "Drugs": true,
-      "TEST": true
+      "Drugs": false,
+      "TEST": true,
+      "Metal Detecting": false,
+      "Illegal Guy": false,
+      "Moonshine Stills": false,
+      "Herbs": true
     },
-    "collapsed": {},
+    "collapsed": {
+      "Metal Detecting": true,
+      "Illegal Guy": true,
+      "Drugs": true,
+      "Herbs": false,
+      "Moonshine Stills": true
+    },
     "image": {
-      "path": "map.jpg",
+      "path": "map.webp",
       "width": 3000,
       "height": 2000
     },
-    "features": []
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "3f675d47-3768-4dc9-8f11-0a25a663005b",
+          "category": "Metal Detecting",
+          "color": "#0055ff",
+          "title": "Spot",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2618.375,
+            1708
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "c1f011de-c3a7-4d81-af13-4b9c6b82de27",
+          "category": "Moonshine Stills",
+          "color": "#1100ff",
+          "title": "Moonshine Still",
+          "description": "Inside of the boat",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2106.25,
+            915.8125
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "09c1c942-4c8a-4ed0-a9f3-e392ee926f0e",
+          "category": "Illegal Guy",
+          "color": "#ff0000",
+          "title": "Illegal Guy",
+          "description": "Under Bridge",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2471,
+            898.4375
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "98c58ec4-53f8-4aa3-bdaf-6eaa6086a553",
+          "category": "Illegal Guy",
+          "color": "#ff0000",
+          "title": "Illegal Guy",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2315.25,
+            783
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "c431146f-37f3-4e10-a495-7e605a52dc77",
+          "category": "Illegal Guy",
+          "color": "#ff0000",
+          "title": "Illegal Guy",
+          "description": "On the boat",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2632,
+            847.375
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "3f87da83-1ef9-4552-898a-59f1a2d9d207",
+          "category": "Drugs",
+          "color": "#00e1ff",
+          "title": "Peyote",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1045.875,
+            668.75
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "a6b0da75-8418-46bc-9c89-b816cab56fd7",
+          "category": "Drugs",
+          "color": "#00fbff",
+          "title": "Peyote",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            953.0625,
+            734.125
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "7418cb0b-513d-48c4-891a-4dadcbe4fa5c",
+          "category": "Drugs",
+          "color": "#00ffff",
+          "title": "Peyote",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            862.375,
+            665.875
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "cbb47cb2-0be4-4e16-ab08-c805855b2013",
+          "category": "Drugs",
+          "color": "#00ffff",
+          "title": "Peyote",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            783.8125,
+            610.40625
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "592de43d-1b15-4f6b-9e2c-f767ee2d8f36",
+          "category": "Drugs",
+          "color": "#00ffff",
+          "title": "Peyote",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            784.625,
+            585.625
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "2a1381d2-7c65-4ccc-9317-fd970a58ea85",
+          "category": "Drugs",
+          "color": "#00ffff",
+          "title": "Peyote",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            754.4375,
+            560.9375
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "3f91f48b-6971-4e19-9b3f-96d204aa3118",
+          "category": "Drugs",
+          "color": "#00ffff",
+          "title": "Peyote",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            929.375,
+            426.25
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "25905961-5d61-4004-8047-0200d6e410de",
+          "category": "Drugs",
+          "color": "#00ffff",
+          "title": "Peyote",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            997.375,
+            400.1875
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "f98dcc6c-c872-43ef-9cf1-58a4805465d7",
+          "category": "Moonshine Stills",
+          "color": "#1100ff",
+          "title": "Moonshine Still",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2135,
+            1661.125
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "1decac6f-0e26-48f7-b3d7-51daac647fc7",
+          "category": "Herbs",
+          "color": "#ffffff",
+          "title": "Wild Feverfew",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1369.1875,
+            651.9375
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "58e8d03a-4233-47e8-8934-a35d949e049b",
+          "category": "Herbs",
+          "color": "#d400ff",
+          "title": "Burdock Root",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1334.75,
+            711.25
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "f9497e0b-b8c6-4a22-94a8-ae786af37387",
+          "category": "Herbs",
+          "color": "#44ff00",
+          "title": "Creeping Thyme",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            2322.25,
+            1290.5
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "be05ca78-3b34-4991-86c0-92c5ec612515",
+          "category": "Herbs",
+          "color": "#1100ff",
+          "title": "Evergreen HuckleBErry",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1420.75,
+            587.5
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "394b64ff-66f7-4e01-9c7d-91f4f4005fe9",
+          "category": "Herbs",
+          "color": "#ff00ea",
+          "title": "Burdock Root",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1446.375,
+            576.75
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "bf085b5a-5e5f-4421-9692-e04868914759",
+          "category": "Herbs",
+          "color": "#ee00ff",
+          "title": "Burdock Root",
+          "description": "",
+          "image": ""
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            1529.75,
+            606
+          ]
+        }
+      }
+    ]
   }
 }

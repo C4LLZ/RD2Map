@@ -168,7 +168,6 @@
       <div class="section">
         <h2>Category</h2>
         <div class="field">
-          <label>Add category</label>
           <div style="display:flex; gap:8px;">
             <input type="text" id="category-input" placeholder="New category" />
             <button id="add-category" class="btn">Add</button>
@@ -176,16 +175,6 @@
         <div style=" display:flex; gap:8px; flex-wrap:wrap;">
           <button id="edit-categories" class="btn ghost">Edit Categories</button>
         </div>
-        </div>
-        <div class="field" style="display:flex; gap:8px;">
-          <div style="flex:1;">
-            <label>Marker color</label>
-            <input type="color" id="marker-color" value="#d4af37" />
-          </div>
-          <div style="flex:1;">
-            <label>Zone color</label>
-            <input type="color" id="zone-color" value="#c59d2f" />
-          </div>
         </div>
       </div>
 
@@ -197,11 +186,14 @@
       <div class="section" style="padding-bottom:0;">
         <h2>Items</h2>
       </div>
+      <div class="section" id="search-wrap" style="padding-top:6px;">
+        <div class="field">
+          <input type="text" id="search-input" placeholder="Search title, description, category" />
+        </div>
+      </div>
       <div id="items" class="list"></div>
 
       <div class="footer">
-        <button id="open-file" class="btn">Open File</button>
-        <button id="save-file" class="btn">Save File</button>
         <button id="export" class="btn">Export</button>
         <label class="btn" for="import-file">Import</label>
         <input id="import-file" type="file" accept="application/json" />
@@ -364,9 +356,12 @@
     const itemsEl = document.getElementById('items');
     // removed current-category pills UI
     const visibilityEl = document.getElementById('visibility-list');
+    const searchInput = document.getElementById('search-input');
 
     const markerColorEl = document.getElementById('marker-color');
     const zoneColorEl = document.getElementById('zone-color');
+    if (markerColorEl) markerColorEl.value = state.markerColor || '#d4af37';
+    if (zoneColorEl) zoneColorEl.value = state.zoneColor || '#c59d2f';
 
     document.getElementById('img-apply').onclick = () => {
       const p = document.getElementById('img-path').value.trim() || 'map.png';
@@ -756,8 +751,36 @@
       input.value = '';
     };
 
-    markerColorEl.oninput = e => { state.markerColor = e.target.value; saveState(); };
-    zoneColorEl.oninput = e => { state.zoneColor = e.target.value; saveState(); };
+    if (markerColorEl) markerColorEl.oninput = e => { state.markerColor = e.target.value; saveState(); };
+    if (zoneColorEl) zoneColorEl.oninput = e => { state.zoneColor = e.target.value; saveState(); };
+    if (searchInput) {
+      searchInput.value = state.search || '';
+      searchInput.oninput = e => { state.search = e.target.value; refreshList(); };
+      searchInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          const q = (searchInput.value || '').trim().toLowerCase();
+          if (!q) return;
+          const first = state.features.find(f => {
+            const t = String(f.properties?.title || (f.geometry?.type === 'Point' ? 'Marker' : 'Zone')).toLowerCase();
+            const d = String(f.properties?.description || '').toLowerCase();
+            const c = String(f.properties?.category || 'General').toLowerCase();
+            return t.includes(q) || d.includes(q) || c.includes(q);
+          });
+          if (first) flyToFeature(first.properties.id);
+        }
+      });
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!searchInput) return;
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+      const isTyping = activeTag === 'input' || activeTag === 'textarea';
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault(); searchInput.focus(); searchInput.select();
+      } else if (!isTyping && e.key === '/') {
+        e.preventDefault(); searchInput.focus();
+      }
+    });
 
     function refreshVisibility() {
       visibilityEl.innerHTML = '';
@@ -774,11 +797,16 @@
     function refreshList() {
       itemsEl.innerHTML = '';
       const byCat = new Map();
+      const q = String(state.search || '').trim().toLowerCase();
       state.categories.forEach(c => byCat.set(c, []));
       state.features.forEach(f => {
         const c = f.properties.category || 'General';
         if (!byCat.has(c)) byCat.set(c, []);
-        byCat.get(c).push(f);
+        const t = String(f.properties?.title || (f.geometry?.type === 'Point' ? 'Marker' : 'Zone')).toLowerCase();
+        const d = String(f.properties?.description || '').toLowerCase();
+        const cat = String(f.properties?.category || 'General').toLowerCase();
+        const match = !q || t.includes(q) || d.includes(q) || cat.includes(q);
+        if (match) byCat.get(c).push(f);
       });
 
       state.categories.forEach(catName => {
@@ -822,9 +850,10 @@
             return b;
           };
           const openBtn = mkItem('Edit', '', () => openEditor(f.properties.id));
+          const dupBtn = mkItem('Duplicate', '', () => duplicateFeature(f.properties.id));
           const flyBtn = mkItem('Go', 'ghost', () => flyToFeature(f.properties.id));
           const delBtn = mkItem('Delete', 'danger', () => deleteFeature(f.properties.id));
-          menu.appendChild(openBtn); menu.appendChild(flyBtn); menu.appendChild(delBtn);
+          menu.appendChild(openBtn); menu.appendChild(dupBtn); menu.appendChild(flyBtn); menu.appendChild(delBtn);
           function hideMenu() { menu.style.display = 'none'; document.removeEventListener('click', onDoc); }
           function onDoc(ev) { if (!menu.contains(ev.target) && ev.target !== moreBtn) hideMenu(); }
           moreBtn.onclick = (ev) => {
@@ -867,6 +896,25 @@
         state.features.splice(idx, 1);
         saveState(); refreshFeatures();
       }
+    }
+
+    function duplicateFeature(id) {
+      const f = state.features.find(x => x.properties.id === id);
+      if (!f) return;
+      const isPoint = f.geometry?.type === 'Point';
+      const title = f.properties?.title || (isPoint ? 'Marker' : 'Zone');
+      const description = f.properties?.description || '';
+      const image = f.properties?.image || '';
+      const category = f.properties?.category || 'General';
+      const color = f.properties?.color || (isPoint ? state.markerColor : state.zoneColor);
+      pendingNew = { title, description, image, category, color };
+      stopActive();
+      if (isPoint) {
+        activeHandler = new L.Draw.Marker(map);
+      } else {
+        activeHandler = new L.Draw.Polygon(map, { shapeOptions: { color } });
+      }
+      activeHandler.enable();
     }
 
     /* Editor modal */
@@ -1035,8 +1083,7 @@
         await writable.close();
       } catch (e) { console.warn(e); }
     }
-    document.getElementById('open-file').onclick = openWorkingFile;
-    document.getElementById('save-file').onclick = () => saveWorkingFile();
+
 
     document.getElementById('import-file').onchange = evt => {
       const file = evt.target.files?.[0]; if (!file) return;
